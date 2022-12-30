@@ -27,7 +27,7 @@ parser.add_argument('-a', '--all', help='Create plots for all the dates in the t
 parser.add_argument('-t', '--today', help='Create a plot for today', action='store_true')
 args = parser.parse_args()
 
-workingHours = True
+workingHours = False
 minTime = 60
 
 path = 'C:\\Users\\' + os.getlogin() + '\\timesheets\\'
@@ -57,12 +57,11 @@ def createPlot(date):
                                 plt.plot([datetime.strptime(time[0], "%H:%M:%S"), datetime.strptime(time[1], "%H:%M:%S")], [key, key], label=dict[key]["name"], linewidth=5, color=dict[key]['color'])
 
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-            # left 0.4
-            plt.gcf().subplots_adjust(left=0.4)
+            plt.gcf().subplots_adjust(left=0.4, right=0.99, top=0.95, bottom=0.1)
             # show the plot
-            plt.show()
-            # save the plot
-            plot.savefig(f'{path}/output/timesheets_{datetime.now().date().strftime("%d-%m-%Y")}.png')
+            # plt.show()
+            plt.gcf().set_size_inches(1920/100, 1080/100)
+            plot.savefig(f'{path}/output/{date}.png', bbox_inches='tight', pad_inches=0.2)
     else:
         print(f'No timesheets file found for {date}')
         return
@@ -84,4 +83,4 @@ elif args.all:
 elif args.today:
     createPlot(datetime.now().date().strftime('%d-%m-%Y'))
 else:
-    print('No arguments provided. Use -h or --help to see the help message.')
+    createPlot(datetime.now().date().strftime('%d-%m-%Y'))
