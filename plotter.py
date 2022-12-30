@@ -27,7 +27,8 @@ parser.add_argument('-a', '--all', help='Create plots for all the dates in the t
 parser.add_argument('-t', '--today', help='Create a plot for today', action='store_true')
 args = parser.parse_args()
 
-workingHours = False
+workingHours = True
+minTime = 60
 
 path = 'C:\\Users\\' + os.getlogin() + '\\timesheets\\'
 # check if output folder exists
@@ -40,10 +41,12 @@ def createPlot(date):
         with open(f'{path}/timesheets_{date}.json', 'r',encoding='utf_8') as f:
             dict = json.load(f)
             plot = plt.figure()
-            plot.suptitle(f'Total time spent: {sum([dict[key]["totalTime"] for key in dict])} seconds')
+            plot.suptitle(f'Total time spent: {round(sum([dict[key]["totalTime"] for key in dict])/3600,2)} hours')
+            # reorder the dict by descending total time
+            dict = {k: v for k, v in sorted(dict.items(), key=lambda item: item[1]['totalTime'], reverse=False)}
             for key in dict:
                 dict[key]['color']=f'#{random.randint(0, 0xFFFFFF):06x}'
-                if dict[key]["totalTime"] > 0:
+                if dict[key]["totalTime"] > minTime:
                     # set key color to a random color
                     for time in dict[key]["times"]:
                         if time[0] != None and time[1] != None:
