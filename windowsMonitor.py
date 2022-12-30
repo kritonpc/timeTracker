@@ -8,11 +8,6 @@ import matplotlib.dates as mdates
 from pynput import keyboard
 
 w=win32gui
-# w.GetWindowText (w.GetForegroundWindow())
-# run continuously and keep track of the windows that are open
-# if a new window is opened, add it to the list
-# when the window is added add the time it was opened to the list
-# if a window is closed, add the time it was closed to the list
 
 
 class Window:
@@ -40,35 +35,6 @@ else:
                 "totalTime": 0,
                 "times":[(datetime.now().strftime("%H:%M:%S"), None)]
             }}
-
-    # create a plot with the x axis being the time and the y axis being the window
-    # show when a window was opened and closed
-    # show the total time spent on each window in the legend
-    # show the total time spent on all windows in the title
-
-plot = plt.figure()
-plot.suptitle(f'Total time spent: {sum([dict[key]["totalTime"] for key in dict])} seconds')
-for key in dict:
-    dict[key]['color']=f'#{random.randint(0, 0xFFFFFF):06x}'
-    if dict[key]["totalTime"] > 60:
-        # set key color to a random color
-        for time in dict[key]["times"]:
-            if time[0] != None and time[1] != None:
-                # if time[0] or time[1] is before 9am or after 6pm, don't show it
-                if datetime.strptime(time[0], "%H:%M:%S").hour >= 9 and datetime.strptime(time[1], "%H:%M:%S").hour <= 18:
-                    # set the same color for the same window
-                    # plt.plot([datetime.strptime(time[0], "%H:%M:%S"), datetime.strptime(time[1], "%H:%M:%S")], [key, key], label=dict[key]["name"], linewidth=5)
-                    plt.plot([datetime.strptime(time[0], "%H:%M:%S"), datetime.strptime(time[1], "%H:%M:%S")], [key, key], label=dict[key]["name"], linewidth=5, color=dict[key]['color'])
-# show the time correctly on the x axis
-# the time is currently shown as 00:00:00
-# it should be shown as 00:00
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-# left 0.4
-plt.gcf().subplots_adjust(left=0.4)
-# show the plot
-plt.show()
-# save the plot
-plot.savefig(f'{path}/timesheets_{datetime.now().date().strftime("%d-%m-%Y")}.png')
 
 
 while True:
