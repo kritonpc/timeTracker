@@ -1,16 +1,4 @@
-# create a script that will create a plot for each day
-# the plot will show the time spent on each window
-
-# it will be able to create a plot for all the days in the timesheets folder
-# it will be able to create a plot for a specific day
-# it will be able to create a plot for a range of days
-# this will be done by using the command line arguments
-
-# the plot will be saved in the timesheets/output folder
-
-# the plot will be saved as a png file
-
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import json
 import random
@@ -18,17 +6,27 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
+import gitlab
+
 import argparse
+
+gitlab_token = 'YOUR_TOKEN'
+gitlab_url = 'https://gitlab.com'
+author_name = 'Kriton Georgiou'
 
 parser = argparse.ArgumentParser(description='Create a plot of the time spent on each window.')
 parser.add_argument('-d', '--date', help='The date of the plot to create. Format: dd-mm-yyyy')
 parser.add_argument('-r', '--range', help='The range of dates to create plots for. Format: dd-mm-yyyy-dd-mm-yyyy')
 parser.add_argument('-a', '--all', help='Create plots for all the dates in the timesheets folder', action='store_true')
 parser.add_argument('-t', '--today', help='Create a plot for today', action='store_true')
+parser.add_argument('-m', '--minTime', help='The minimum time spent on a window to be included in the plot. Default: 60 seconds', type=int)
+parser.add_argument('-s', '--show', help='Show the plot. Default: False', action='store_true')
+parser.add_argument('-w', '--workingHours', help='Only include windows that were opened during working hours. Default: False', action='store_true')
+parser.add_argument('-g', '--gitlab', help='Fetch GitLab commits by me for the specific time period', action='store_true')
 args = parser.parse_args()
 
-workingHours = False
-minTime = 60
+workingHours = args.workingHours
+minTime = args.minTime if args.minTime else 60
 
 path = 'C:\\Users\\' + os.getlogin() + '\\timesheets\\'
 # check if output folder exists
@@ -37,6 +35,14 @@ if not os.path.exists(path + 'output'):
 
 def createPlot(date):
     # check if timesheets file exists
+    if args.gitlab:
+        day = datetime.strptime(date, '%d-%m-%Y')
+        commits = project.commits.list(ref_name='master', since=day, until=day+timedelta(days=1), get_all=True)
+        messages = []
+        for commit in commits:
+            if commit.author_name == author_name:
+                messages.append(commit.title)
+        print(f'Commits for {date}: {messages}')
     if os.path.exists(f'{path}/timesheets_{date}.json'):
         with open(f'{path}/timesheets_{date}.json', 'r',encoding='utf_8') as f:
             dict = json.load(f)
@@ -61,11 +67,19 @@ def createPlot(date):
             # show the plot
             # plt.show()
             plt.gcf().set_size_inches(1920/100, 1080/100)
+            # show gitlab commits
+            plt.text(0.01, 0.01, f'Commits for {date}: {messages}', transform=plt.gcf().transFigure, fontsize=8)
             plot.savefig(f'{path}/output/{date}.png', bbox_inches='tight', pad_inches=0.2)
     else:
         print(f'No timesheets file found for {date}')
         return
         
+if args.gitlab:
+    gl = gitlab.Gitlab(gitlab_url,private_token=gitlab_token)
+    gl.auth()
+    # get project sfcc-mirakl
+    project = gl.projects.list(search='sfcc-mirakl')[0]
+    
 
 if args.date:
     createPlot(args.date)
@@ -80,7 +94,17 @@ elif args.all:
     for file in os.listdir(path):
         if file.startswith('timesheets_'):
             createPlot(file.split('_')[1].split('.')[0])
+    start = datetime.now().replace(day=1)
+    end = datetime.now()
 elif args.today:
+    start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    end = datetime.now()
     createPlot(datetime.now().date().strftime('%d-%m-%Y'))
 else:
+    start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    end = datetime.now()
     createPlot(datetime.now().date().strftime('%d-%m-%Y'))
+
+
+if args.show:
+    plt.show()
