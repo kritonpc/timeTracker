@@ -24,7 +24,6 @@ if 'GITLAB_URL' in os.environ:
 if 'GITLAB_AUTHOR_NAME' in os.environ:
     author_name = os.environ['GITLAB_AUTHOR_NAME']
 
-print(f'Using GitLab token: {gitlab_token}')
 parser = argparse.ArgumentParser(description='Create a plot of the time spent on each window.')
 parser.add_argument('-d', '--date', help='The date of the plot to create. Format: dd-mm-yyyy')
 parser.add_argument('-r', '--range', help='The range of dates to create plots for. Format: dd-mm-yyyy-dd-mm-yyyy')
@@ -47,13 +46,12 @@ if not os.path.exists(path + 'output'):
 def createPlot(date):
     # check if timesheets file exists
     if args.gitlab:
+        messages = []
         day = datetime.strptime(date, '%d-%m-%Y')
         commits = project.commits.list(ref_name='master', since=day, until=day+timedelta(days=1), get_all=True)
-        messages = []
         for commit in commits:
             if commit.author_name == author_name:
                 messages.append(commit.title)
-        print(f'Commits for {date}: {messages}')
     if os.path.exists(f'{path}/timesheets_{date}.json'):
         with open(f'{path}/timesheets_{date}.json', 'r',encoding='utf_8') as f:
             dict = json.load(f)
@@ -79,7 +77,10 @@ def createPlot(date):
             # plt.show()
             plt.gcf().set_size_inches(1920/100, 1080/100)
             # show gitlab commits
-            plt.text(0.01, 0.01, f'Commits for {date}: {messages}', transform=plt.gcf().transFigure, fontsize=8)
+            if args.gitlab:
+                plt.text(0.01, 0.1, f'Commits for {date}:', transform=plt.gcf().transFigure, fontsize=8)
+                for i, message in enumerate(messages):
+                    plt.text(0.01, 0.1 - (i+1)*0.01, message, transform=plt.gcf().transFigure, fontsize=8)
             plot.savefig(f'{path}/output/{date}.png', bbox_inches='tight', pad_inches=0.2)
     else:
         print(f'No timesheets file found for {date}')
