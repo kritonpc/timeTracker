@@ -12,8 +12,19 @@ import argparse
 
 gitlab_token = 'YOUR_TOKEN'
 gitlab_url = 'https://gitlab.com'
-author_name = 'Kriton Georgiou'
+author_name = 'Your Name'
+# use environment variables to set the token and url
+# in order to set the environment variables in Windows, use the following command:
+# setx GITLAB_TOKEN "YOUR_TOKEN" 
 
+if 'GITLAB_TOKEN' in os.environ:
+    gitlab_token = os.environ['GITLAB_TOKEN']
+if 'GITLAB_URL' in os.environ:
+    gitlab_url = os.environ['GITLAB_URL']
+if 'GITLAB_AUTHOR_NAME' in os.environ:
+    author_name = os.environ['GITLAB_AUTHOR_NAME']
+
+print(f'Using GitLab token: {gitlab_token}')
 parser = argparse.ArgumentParser(description='Create a plot of the time spent on each window.')
 parser.add_argument('-d', '--date', help='The date of the plot to create. Format: dd-mm-yyyy')
 parser.add_argument('-r', '--range', help='The range of dates to create plots for. Format: dd-mm-yyyy-dd-mm-yyyy')
